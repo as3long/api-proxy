@@ -4,7 +4,6 @@ import {
   convertAnthropicRequestToOpenAI,
   convertOpenAIResponseToAnthropic
 } from '../services/index';
-import { debug } from 'console';
 
 const router = express.Router();
 
