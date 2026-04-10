@@ -19,7 +19,7 @@
 - `/v1/chat/completions` - 聊天完成API（接收OpenAI格式请求，转发到Anthropic API）
 
 #### Anthropic兼容端点
-- `/anthropic/v1/messages` - 消息API（接收Anthropic格式请求，转发到OpenAI API）
+- `/v1/messages` - 消息API（接收Anthropic格式请求，转发到OpenAI API）
 
 ### 2.3 请求转换
 
