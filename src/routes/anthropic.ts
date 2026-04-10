@@ -2,7 +2,8 @@ import express from 'express';
 import config from '../config';
 import {
   convertAnthropicRequestToOpenAI,
-  convertOpenAIResponseToAnthropic
+  convertOpenAIResponseToAnthropic,
+  convertOpenAIStreamToAnthropic
 } from '../services/index';
 
 const router = express.Router();
@@ -69,6 +70,31 @@ router.post('/messages', async (req, res) => {
         });
       }
 
+      // 检查是否请求流式响应
+      const isStreaming = anthropicRequest.stream === true;
+
+      // 处理流式响应
+      if (isStreaming && openAIResponse.body) {
+        // 设置SSE响应头
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Request-Id', openAIResponse.headers.get('X-Request-Id') || '');
+
+        // 转换流式响应
+        const stream = convertOpenAIStreamToAnthropic(
+          openAIResponse.body,
+          anthropicRequest.model || config.defaultOpenAIModel
+        );
+
+        for await (const chunk of stream) {
+          res.write(chunk);
+        }
+        res.end();
+        return;
+      }
+
+      // 非流式响应处理
       // 转换响应格式
       const openAIData = await openAIResponse.json() as any;
       const anthropicResponse = convertOpenAIResponseToAnthropic(openAIData);

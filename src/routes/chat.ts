@@ -2,7 +2,8 @@ import express from 'express';
 import config from '../config';
 import {
   convertOpenAIRequestToAnthropic,
-  convertAnthropicResponseToOpenAI
+  convertAnthropicResponseToOpenAI,
+  convertAnthropicStreamToOpenAI
 } from '../services/index';
 
 const router = express.Router();
@@ -39,6 +40,9 @@ router.post('/completions', async (req, res) => {
       });
     }
 
+    // 检查是否请求流式响应
+    const isStreaming = openAIRequest.stream === true;
+
     // 发送请求到Anthropic API
     // 使用AbortController实现超时
     const controller = new AbortController();
@@ -71,7 +75,28 @@ router.post('/completions', async (req, res) => {
         });
       }
 
-      // 转换响应格式
+      // 处理流式响应
+      if (isStreaming && anthropicResponse.body) {
+        // 设置SSE响应头
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Request-Id', anthropicResponse.headers.get('X-Request-Id') || '');
+
+        // 转换流式响应
+        const stream = convertAnthropicStreamToOpenAI(
+          anthropicResponse.body,
+          openAIRequest.model || config.defaultModel
+        );
+
+        for await (const chunk of stream) {
+          res.write(chunk);
+        }
+        res.end();
+        return;
+      }
+
+      // 非流式响应处理
       const anthropicData = await anthropicResponse.json() as any;
       const openAIResponse = convertAnthropicResponseToOpenAI(anthropicData);
 
