@@ -133,7 +133,7 @@ curl https://api.anthropic.com/v1/messages \
 
 **改为代理服务请求：**
 ```bash
-curl http://localhost:3000/anthropic/v1/messages \
+curl http://localhost:3000/v1/messages \
   -H "Content-Type: application/json" \
   -H "x-api-key: your_openai_api_key" \
   -d '{
@@ -151,7 +151,7 @@ curl http://localhost:3000/anthropic/v1/messages \
 - `/v1/chat/completions` - 聊天完成API（接收OpenAI格式请求，转发到Anthropic API）
 
 ### Anthropic兼容端点
-- `/anthropic/v1/messages` - 消息API（接收Anthropic格式请求，转发到OpenAI API）
+- `/v1/messages` - 消息API（接收Anthropic格式请求，转发到OpenAI API）
 
 ## 项目结构
 

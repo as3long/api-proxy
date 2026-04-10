@@ -133,7 +133,7 @@ curl https://api.anthropic.com/v1/messages \
 
 **Proxy service request:**
 ```bash
-curl http://localhost:3000/anthropic/v1/messages \
+curl http://localhost:3000/v1/messages \
   -H "Content-Type: application/json" \
   -H "x-api-key: your_openai_api_key" \
   -d '{
@@ -151,7 +151,7 @@ curl http://localhost:3000/anthropic/v1/messages \
 - `/v1/chat/completions` - Chat Completions API (receives OpenAI format, forwards to Anthropic API)
 
 ### Anthropic-compatible Endpoints
-- `/anthropic/v1/messages` - Messages API (receives Anthropic format, forwards to OpenAI API)
+- `/v1/messages` - Messages API (receives Anthropic format, forwards to OpenAI API)
 
 ## Project Structure
 
