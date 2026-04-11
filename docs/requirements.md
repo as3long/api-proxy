@@ -12,6 +12,9 @@
 2. **API服务器**：提供OpenAI兼容和Anthropic兼容的API端点
 3. **配置管理**：支持通过环境变量或配置文件进行配置
 4. **错误处理**：提供友好的错误响应
+5. **流式响应支持**：支持OpenAI和Anthropic的流式响应格式转换
+6. **Token使用统计**：记录和统计API调用的Token使用情况
+7. **健康检查**：提供健康检查端点
 
 ### 2.2 支持的API端点
 
@@ -20,6 +23,13 @@
 
 #### Anthropic兼容端点
 - `/v1/messages` - 消息API（接收Anthropic格式请求，转发到OpenAI API）
+
+#### 统计和健康检查端点
+- `/v1/stats` - Token使用统计API
+- `/v1/health` - 健康检查端点
+
+#### 可视化页面
+- `/token-stats.html` - Token使用统计可视化页面（通过浏览器访问）
 
 ### 2.3 请求转换
 
@@ -109,13 +119,36 @@ api-proxy/
 ├── src/
 │   ├── index.ts           # 服务器入口
 │   ├── routes/
-│   │   └── chat.ts        # 聊天API路由
+│   │   ├── chat.ts        # 聊天API路由（OpenAI兼容）
+│   │   ├── anthropic.ts   # 消息API路由（Anthropic兼容）
+│   │   └── stats.ts       # 统计API路由
 │   ├── services/
-│   │   └── converter.ts   # 格式转换服务
-│   └── config/
-│       └── index.ts       # 配置管理
+│   │   ├── types.ts                   # 类型定义
+│   │   ├── openai-to-anthropic.ts     # OpenAI到Anthropic转换
+│   │   ├── anthropic-to-openai.ts     # Anthropic到OpenAI转换
+│   │   ├── openai-stream-to-anthropic.ts  # OpenAI流式到Anthropic转换
+│   │   ├── anthropic-stream-to-openai.ts  # Anthropic流式到OpenAI转换
+│   │   ├── index.ts                   # 服务导出
+│   │   ├── openai-to-anthropic.test.ts    # OpenAI到Anthropic转换测试
+│   │   ├── anthropic-to-openai.test.ts    # Anthropic到OpenAI转换测试
+│   │   ├── tool-call.test.ts         # 工具调用测试
+│   │   └── stream.test.ts            # 流式转换测试
+│   ├── middleware/
+│   │   └── token-stats.ts            # Token统计中间件
+│   ├── config/
+│   │   └── index.ts                   # 配置管理
+│   └── utils/
+│       └── token-usage.ts            # Token使用统计工具
+├── public/
+│   └── token-stats.html              # Token统计可视化页面
+├── data/
+│   └── tokens.csv                     # Token使用数据
+├── docs/
+│   └── requirements.md                # 需求文档
 ├── package.json
 ├── tsconfig.json
+├── jest.config.js
+├── .env.example
 └── README.md
 ```
 
@@ -128,6 +161,8 @@ api-proxy/
 | OPENAI_API_KEY | string | - | OpenAI API密钥 |
 | DEFAULT_MODEL | string | claude-3-opus-20240229 | 默认使用的Anthropic模型 |
 | DEFAULT_OPENAI_MODEL | string | gpt-3.5-turbo | 默认使用的OpenAI模型 |
+| ANTHROPIC_API_URL | string | https://api.anthropic.com/v1/messages | Anthropic API地址 |
+| OPENAI_API_URL | string | https://api.openai.com/v1/chat/completions | OpenAI API地址 |
 | TIMEOUT | number | 30000 | API请求超时时间（毫秒） |
 
 ## 4. 性能需求
@@ -171,5 +206,8 @@ api-proxy/
 - 能够将Anthropic的响应转换为OpenAI格式
 - 支持所有主要的请求参数
 - 提供友好的错误处理
+- 支持流式响应格式转换
+- 能够正确统计Token使用情况
+- 提供健康检查端点
 - 性能满足要求
 - 代码质量良好，测试覆盖率高
