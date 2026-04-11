@@ -3,7 +3,8 @@
     "allow": [
       "WebSearch",
       "WebFetch(domain:help.aliyun.com)",
-      "WebFetch(domain:www.aliyun.com)"
+      "WebFetch(domain:www.aliyun.com)",
+      "Bash(ls:*)"
     ]
   }
 }
