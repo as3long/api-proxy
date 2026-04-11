@@ -153,6 +153,65 @@ curl http://localhost:3000/v1/messages \
 ### Anthropic兼容端点
 - `/v1/messages` - 消息API（接收Anthropic格式请求，转发到OpenAI API）
 
+### 统计数据接口
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/stats/data` | GET | 获取调用统计 |
+| `/token-stats/data` | GET | 获取 Token 统计 |
+| `/token-stats/clear` | POST | 清空 Token 统计 |
+| `/token-stats.html` | GET | Token 消耗统计可视化页面 |
+
+#### Token 消耗统计可视化页面 (/token-stats.html)
+
+访问 `/token-stats.html` 可查看 Token 消耗统计的可视化页面，包含：
+- 总请求数、输入/输出 Token 数统计
+- 按 API 类型和模型分组的统计图表
+- 最近 100 条请求记录的详细列表
+
+#### 调用统计 (/api/stats/data)
+
+返回统计数据包含以下信息：
+- `totalRequests`: 总请求数
+- `totalTokens`: 消耗的总 token 数
+- `avgResponseTime`: 平均响应时间(毫秒)
+- `successRate`: 请求成功率
+- `byModel`: 按模型分组的统计
+
+#### Token 统计 (/token-stats/data)
+
+返回详细的 Token 使用统计和最近 100 条记录：
+
+**汇总信息：**
+- `totalRequests`: 总请求数
+- `totalInputTokens`: 总输入 Token 数
+- `totalOutputTokens`: 总输出 Token 数
+- `totalTokens`: 消耗的总 Token 数
+- `avgResponseTime`: 平均响应时间(毫秒)
+- `successRate`: 请求成功率
+- `byApiType`: 按 API 类型(openai/anthropic)分组的统计
+- `byModel`: 按模型分组的统计
+
+**记录格式：**
+```json
+{
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "apiType": "openai",
+  "route": "/v1/chat/completions",
+  "model": "gpt-4",
+  "inputTokens": 100,
+  "outputTokens": 200,
+  "totalTokens": 300,
+  "responseTime": 15000,
+  "statusCode": 200,
+  "isStream": false
+}
+```
+
+- `isStream`: 是否为流式响应 (`true` / `false`)
+
+**数据存储位置：** `data/tokens.csv` (CSV 格式)
+
 ## 项目结构
 
 ```

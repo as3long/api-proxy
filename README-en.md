@@ -153,6 +153,65 @@ curl http://localhost:3000/v1/messages \
 ### Anthropic-compatible Endpoints
 - `/v1/messages` - Messages API (receives Anthropic format, forwards to OpenAI API)
 
+### Statistics APIs
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/stats/data` | GET | Get call statistics |
+| `/token-stats/data` | GET | Get Token statistics |
+| `/token-stats/clear` | POST | Clear Token statistics |
+| `/token-stats.html` | GET | Token consumption statistics visualization page |
+
+#### Token Consumption Statistics Visualization (/token-stats.html)
+
+Visit `/token-stats.html` to view the Token consumption statistics visualization page, which includes:
+- Total requests, input/output token counts
+- Statistics grouped by API type and model
+- Detailed list of the last 100 request records
+
+#### Call Statistics (/api/stats/data)
+
+Returns statistics including:
+- `totalRequests`: Total number of requests
+- `totalTokens`: Total tokens consumed
+- `avgResponseTime`: Average response time (ms)
+- `successRate`: Request success rate
+- `byModel`: Statistics grouped by model
+
+#### Token Statistics (/token-stats/data)
+
+Returns detailed Token usage statistics and the last 100 records:
+
+**Summary:**
+- `totalRequests`: Total number of requests
+- `totalInputTokens`: Total input tokens
+- `totalOutputTokens`: Total output tokens
+- `totalTokens`: Total tokens consumed
+- `avgResponseTime`: Average response time (ms)
+- `successRate`: Request success rate
+- `byApiType`: Statistics grouped by API type (openai/anthropic)
+- `byModel`: Statistics grouped by model
+
+**Record format:**
+```json
+{
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "apiType": "openai",
+  "route": "/v1/chat/completions",
+  "model": "gpt-4",
+  "inputTokens": 100,
+  "outputTokens": 200,
+  "totalTokens": 300,
+  "responseTime": 15000,
+  "statusCode": 200,
+  "isStream": false
+}
+```
+
+- `isStream`: Whether it's a streaming response (`true` / `false`)
+
+**Data storage location:** `data/tokens.csv` (CSV format)
+
 ## Project Structure
 
 ```
