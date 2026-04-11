@@ -220,14 +220,31 @@ api-proxy/
 │   ├── index.ts           # 服务器入口
 │   ├── routes/
 │   │   ├── chat.ts        # 聊天API路由（OpenAI兼容）
-│   │   └── anthropic.ts  # 消息API路由（Anthropic兼容）
+│   │   ├── anthropic.ts   # 消息API路由（Anthropic兼容）
+│   │   └── stats.ts       # 统计API路由
 │   ├── services/
-│   │   ├── converter.ts   # 格式转换服务
-│   │   └── converter.test.ts # 转换逻辑测试
-│   └── config/
-│       └── index.ts       # 配置管理
+│   │   ├── types.ts                   # 类型定义
+│   │   ├── openai-to-anthropic.ts     # OpenAI到Anthropic转换
+│   │   ├── anthropic-to-openai.ts     # Anthropic到OpenAI转换
+│   │   ├── openai-stream-to-anthropic.ts  # OpenAI流式到Anthropic转换
+│   │   ├── anthropic-stream-to-openai.ts  # Anthropic流式到OpenAI转换
+│   │   ├── index.ts                   # 服务导出
+│   │   ├── openai-to-anthropic.test.ts    # OpenAI到Anthropic转换测试
+│   │   ├── anthropic-to-openai.test.ts    # Anthropic到OpenAI转换测试
+│   │   ├── tool-call.test.ts         # 工具调用测试
+│   │   └── stream.test.ts            # 流式转换测试
+│   ├── middleware/
+│   │   └── token-stats.ts            # Token统计中间件
+│   ├── config/
+│   │   └── index.ts                   # 配置管理
+│   └── utils/
+│       └── token-usage.ts            # Token使用统计工具
+├── public/
+│   └── token-stats.html              # Token统计可视化页面
+├── data/
+│   └── tokens.csv                     # Token使用数据
 ├── docs/
-│   └── requirements.md    # 需求文档
+│   └── requirements.md                # 需求文档
 ├── package.json
 ├── tsconfig.json
 ├── jest.config.js

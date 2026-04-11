@@ -220,14 +220,31 @@ api-proxy/
 │   ├── index.ts           # Server entry point
 │   ├── routes/
 │   │   ├── chat.ts        # Chat API routes (OpenAI compatible)
-│   │   └── anthropic.ts  # Message API routes (Anthropic compatible)
+│   │   ├── anthropic.ts   # Message API routes (Anthropic compatible)
+│   │   └── stats.ts       # Statistics API routes
 │   ├── services/
-│   │   ├── converter.ts   # Format conversion service
-│   │   └── converter.test.ts # Conversion logic tests
-│   └── config/
-│       └── index.ts       # Configuration management
+│   │   ├── types.ts                   # Type definitions
+│   │   ├── openai-to-anthropic.ts     # OpenAI to Anthropic conversion
+│   │   ├── anthropic-to-openai.ts     # Anthropic to OpenAI conversion
+│   │   ├── openai-stream-to-anthropic.ts  # OpenAI stream to Anthropic conversion
+│   │   ├── anthropic-stream-to-openai.ts  # Anthropic stream to OpenAI conversion
+│   │   ├── index.ts                   # Service exports
+│   │   ├── openai-to-anthropic.test.ts    # OpenAI to Anthropic conversion tests
+│   │   ├── anthropic-to-openai.test.ts    # Anthropic to OpenAI conversion tests
+│   │   ├── tool-call.test.ts         # Tool call tests
+│   │   └── stream.test.ts            # Stream conversion tests
+│   ├── middleware/
+│   │   └── token-stats.ts            # Token statistics middleware
+│   ├── config/
+│   │   └── index.ts                   # Configuration management
+│   └── utils/
+│       └── token-usage.ts            # Token usage statistics utilities
+├── public/
+│   └── token-stats.html              # Token statistics visualization page
+├── data/
+│   └── tokens.csv                     # Token usage data
 ├── docs/
-│   └── requirements.      # Requirements documentation
+│   └── requirements.md                # Requirements documentation
 ├── package.json
 ├── tsconfig.json
 ├── jest.config.js
