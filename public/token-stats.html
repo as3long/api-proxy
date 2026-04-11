@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token 消耗统计</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .card h3 {
+      color: #666;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .card .value {
+      font-size: 28px;
+      font-weight: 600;
+      color: #333;
+    }
+    .card .value.green { color: #52c41a; }
+    .card .value.blue { color: #1890ff; }
+    .card .value.orange { color: #fa8c16; }
+    .card .value.purple { color: #722ed1; }
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .section h2 {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    th {
+      background: #fafafa;
+      font-weight: 500;
+      color: #666;
+    }
+    tr:hover {
+      background: #fafafa;
+    }
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+    .refresh-btn {
+      background: #1890ff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      float: right;
+    }
+    .refresh-btn:hover {
+      background: #40a9ff;
+    }
+    .clear-btn {
+      background: #ff4d4f;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    .clear-btn:hover {
+      background: #ff7875;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Token 消耗统计 <button class="refresh-btn" onclick="loadData()">刷新</button></h1>
+
+    <div class="summary" id="summary">
+      <div class="card">
+        <h3>总请求数</h3>
+        <div class="value" id="totalRequests">-</div>
+      </div>
+      <div class="card">
+        <h3>Input Tokens</h3>
+        <div class="value green" id="totalInputTokens">-</div>
+      </div>
+      <div class="card">
+        <h3>Output Tokens</h3>
+        <div class="value blue" id="totalOutputTokens">-</div>
+      </div>
+      <div class="card">
+        <h3>Total Tokens</h3>
+        <div class="value orange" id="totalTokens">-</div>
+      </div>
+      <div class="card">
+        <h3>平均响应时间</h3>
+        <div class="value purple" id="avgResponseTime">-</div>
+      </div>
+      <div class="card">
+        <h3>成功率</h3>
+        <div class="value" id="successRate">-</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>按 API 类型</h2>
+      <table id="byApiTypeTable">
+        <thead>
+          <tr>
+            <th>API 类型</th>
+            <th>请求数</th>
+            <th>Input Tokens</th>
+            <th>Output Tokens</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>按模型</h2>
+      <table id="byModelTable">
+        <thead>
+          <tr>
+            <th>模型</th>
+            <th>请求数</th>
+            <th>Input Tokens</th>
+            <th>Output Tokens</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>最近请求 <button class="clear-btn" onclick="clearData()">清空数据</button></h2>
+      <table id="recentTable">
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>API 类型</th>
+            <th>模型</th>
+            <th>Input</th>
+            <th>Output</th>
+            <th>总计</th>
+            <th>响应时间</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    async function loadData() {
+      try {
+        const res = await fetch('/token-stats/data');
+        const data = await res.json();
+        render(data);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function render(data) {
+      const { summary, records } = data;
+
+      // Summary
+      document.getElementById('totalRequests').textContent = summary.totalRequests;
+      document.getElementById('totalInputTokens').textContent = formatNumber(summary.totalInputTokens);
+      document.getElementById('totalOutputTokens').textContent = formatNumber(summary.totalOutputTokens);
+      document.getElementById('totalTokens').textContent = formatNumber(summary.totalTokens);
+      document.getElementById('avgResponseTime').textContent = summary.avgResponseTime + ' ms';
+      document.getElementById('successRate').textContent = summary.successRate + '%';
+
+      // By API Type
+      const apiTypeBody = document.querySelector('#byApiTypeTable tbody');
+      apiTypeBody.innerHTML = Object.entries(summary.byApiType).map(([type, v]) => `
+        <tr>
+          <td>${type}</td>
+          <td>${v.count}</td>
+          <td>${formatNumber(v.inputTokens)}</td>
+          <td>${formatNumber(v.outputTokens)}</td>
+        </tr>
+      `).join('');
+
+      // By Model
+      const modelBody = document.querySelector('#byModelTable tbody');
+      modelBody.innerHTML = Object.entries(summary.byModel).map(([model, v]) => `
+        <tr>
+          <td>${model}</td>
+          <td>${v.count}</td>
+          <td>${formatNumber(v.inputTokens)}</td>
+          <td>${formatNumber(v.outputTokens)}</td>
+        </tr>
+      `).join('');
+
+      // Recent
+      const recentBody = document.querySelector('#recentTable tbody');
+      if (records.length === 0) {
+        recentBody.innerHTML = '<tr><td colspan="7" class="empty">暂无数据</td></tr>';
+      } else {
+        recentBody.innerHTML = records.map(r => `
+          <tr>
+            <td>${new Date(r.timestamp).toLocaleString('zh-CN')}</td>
+            <td>${r.apiType}</td>
+            <td>${r.model}</td>
+            <td>${formatNumber(r.inputTokens)}</td>
+            <td>${formatNumber(r.outputTokens)}</td>
+            <td>${formatNumber(r.totalTokens)}</td>
+            <td>${r.responseTime} ms</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    function formatNumber(n) {
+      if (n >= 1000000) {
+        return (n / 1000000).toFixed(2) + 'M';
+      }
+      return n.toLocaleString();
+    }
+
+    async function clearData() {
+      if (confirm('确定要清空所有统计数据吗？')) {
+        await fetch('/token-stats/clear', { method: 'POST' });
+        loadData();
+      }
+    }
+
+    loadData();
+    setInterval(loadData, 10000);
+  </script>
+</body>
+</html>

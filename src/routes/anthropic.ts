@@ -80,6 +80,11 @@ router.post('/messages', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
         res.setHeader('X-Request-Id', openAIResponse.headers.get('X-Request-Id') || '');
+        // 传递 usage 信息用于统计 (OpenAI 使用 x-usage 头)
+        const usageHeader = openAIResponse.headers.get('x-usage');
+        if (usageHeader) {
+          res.setHeader('x-usage', usageHeader);
+        }
 
         // 转换流式响应
         const stream = convertOpenAIStreamToAnthropic(

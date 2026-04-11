@@ -70,6 +70,9 @@ The core conversion logic lives here:
 ### Configuration (`src/config/`)
 - `index.ts` - Loads environment variables from `.env`, provides typed config object
 
+### Middleware (`src/middleware/`)
+- `token-stats.ts` - Middleware that intercepts responses and records token usage to `data/tokens.jsonl`
+
 ## Key Design Patterns
 
 1. **Bidirectional Conversion**: Each direction (OpenAI↔Anthropic) has its own converter module with `convertXxxToYyy` functions
@@ -95,4 +98,17 @@ The core conversion logic lives here:
 
 ## Testing
 
+## Token Statistics
+
+The proxy records token usage for each API call:
+
+- **Data file**: `data/tokens.jsonl` (JSON Lines format, one record per line)
+
+- **Stats API**: `/token-stats/data` - returns aggregated statistics and recent 100 records
+
+- **Clear data**: `POST /token-stats/clear` - deletes all token records
+
+- **Web UI**: `/token-stats.html` - visual statistics dashboard
+
+Stats include: total requests, input/output/total tokens, average response time, success rate, breakdown by API type and model.
 Tests use Jest and are co-located with source files (e.g., `openai-to-anthropic.test.ts`). Run specific tests with `npm test -- `.

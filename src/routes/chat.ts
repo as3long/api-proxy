@@ -82,6 +82,11 @@ router.post('/completions', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
         res.setHeader('X-Request-Id', anthropicResponse.headers.get('X-Request-Id') || '');
+        // 传递 usage 信息用于统计
+        const xRayUsage = anthropicResponse.headers.get('x-amazon-xray-usage');
+        if (xRayUsage) {
+          res.setHeader('x-usage', xRayUsage);
+        }
 
         // 转换流式响应
         const stream = convertAnthropicStreamToOpenAI(
