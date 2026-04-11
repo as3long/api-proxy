@@ -60,7 +60,7 @@ DEFAULT_MODEL=claude-3-opus-20240229
 DEFAULT_OPENAI_MODEL=gpt-3.5-turbo
 
 # Timeout configuration (milliseconds)
-TIMEOUT=30000
+TIMEOUT=60000
 ```
 
 ## Running
