@@ -210,7 +210,7 @@ Returns detailed Token usage statistics and the last 100 records:
 
 - `isStream`: Whether it's a streaming response (`true` / `false`)
 
-**Data storage location:** `data/tokens.csv` (CSV format)
+**Data storage location:** `data/tokens.bin` (FlatBuffer format)
 
 ## Project Structure
 
@@ -242,7 +242,7 @@ api-proxy/
 ├── public/
 │   └── token-stats.html              # Token statistics visualization page
 ├── data/
-│   └── tokens.csv                     # Token usage data
+│   └── tokens.bin                      # Token usage data (FlatBuffer)
 ├── docs/
 │   └── requirements.md                # Requirements documentation
 ├── package.json

@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import fs from 'fs';
-import path from 'path';
+import { saveTokenRecordFlatBufferAsync } from './token-stats-flatbuffer';
 
 interface TokenRecord {
   timestamp: string;
@@ -15,38 +14,8 @@ interface TokenRecord {
   isStream: boolean;
 }
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
-const TOKEN_FILE = path.join(DATA_DIR, 'tokens.csv');
-const CSV_HEADER = 'timestamp,apiType,route,model,inputTokens,outputTokens,totalTokens,responseTime,statusCode,isStream';
-
-function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-}
-
-function ensureCsvHeader() {
-  if (!fs.existsSync(TOKEN_FILE)) {
-    fs.writeFileSync(TOKEN_FILE, CSV_HEADER + '\n', 'utf-8');
-  }
-}
-
-function saveTokenRecord(record: TokenRecord) {
-  ensureDataDir();
-  ensureCsvHeader();
-  const row = [
-    record.timestamp,
-    record.apiType,
-    record.route,
-    record.model,
-    record.inputTokens,
-    record.outputTokens,
-    record.totalTokens,
-    record.responseTime,
-    record.statusCode,
-    record.isStream
-  ].map(v => String(v).replace(/,/g, ';')).join(',');
-  fs.appendFileSync(TOKEN_FILE, row + '\n', 'utf-8');
+async function saveTokenRecord(record: TokenRecord) {
+  await saveTokenRecordFlatBufferAsync(record);
 }
 
 function extractUsage(reqPath: string, body: any): { inputTokens: number; outputTokens: number } | null {
@@ -123,7 +92,8 @@ export function tokenStatsMiddleware(req: Request, res: Response, next: NextFunc
           statusCode: res.statusCode,
           isStream: false
         };
-        saveTokenRecord(record);
+        // 异步保存，不等待完成
+        saveTokenRecord(record).catch(console.error);
       }
     }
 
@@ -213,7 +183,8 @@ export function tokenStatsMiddleware(req: Request, res: Response, next: NextFunc
             statusCode: res.statusCode,
             isStream: true
           };
-          saveTokenRecord(record);
+          // 异步保存，不等待完成
+          saveTokenRecord(record).catch(console.error);
           streamRecorded = true;
         }
       }

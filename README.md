@@ -210,7 +210,7 @@ curl http://localhost:3000/v1/messages \
 
 - `isStream`: 是否为流式响应 (`true` / `false`)
 
-**数据存储位置：** `data/tokens.csv` (CSV 格式)
+**数据存储位置：** `data/tokens.bin` (FlatBuffer 格式)
 
 ## 项目结构
 
@@ -242,7 +242,7 @@ api-proxy/
 ├── public/
 │   └── token-stats.html              # Token统计可视化页面
 ├── data/
-│   └── tokens.csv                     # Token使用数据
+│   └── tokens.bin                      # Token使用数据 (FlatBuffer)
 ├── docs/
 │   └── requirements.md                # 需求文档
 ├── package.json

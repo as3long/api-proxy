@@ -1,0 +1,16 @@
+namespace TokenStats;
+
+table TokenRecord {
+  timestamp: string;
+  apiType: string;
+  route: string;
+  model: string;
+  inputTokens: long;
+  outputTokens: long;
+  totalTokens: long;
+  responseTime: long;
+  statusCode: int;
+  isStream: bool;
+}
+
+root_type TokenRecord;

@@ -239,7 +239,7 @@
       if (records.length === 0) {
         recentBody.innerHTML = '<tr><td colspan="7" class="empty">暂无数据</td></tr>';
       } else {
-        recentBody.innerHTML = records.map(r => `
+        recentBody.innerHTML = records.slice().reverse().map(r => `
           <tr>
             <td>${new Date(r.timestamp).toLocaleString('zh-CN')}</td>
             <td>${r.apiType}</td>
