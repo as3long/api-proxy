@@ -1,6 +1,6 @@
 {
   "name": "api-proxy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Bidirectional proxy between OpenAI and Anthropic compatible APIs",
   "main": "dist/index.js",
   "scripts": {

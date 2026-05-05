@@ -70,7 +70,7 @@ export function tokenStatsMiddleware(req: Request, res: Response, next: NextFunc
   const originalJson = res.json.bind(res);
   const originalWrite = res.write.bind(res);
 
-  // 用于存储流式响应的 usage 信息
+  // 用于标记流式响应是否已记录
   let streamRecorded = false;
 
   res.json = function(body: any) {
@@ -100,94 +100,73 @@ export function tokenStatsMiddleware(req: Request, res: Response, next: NextFunc
     return originalJson(body);
   };
 
-  // 用于存储流式响应的 usage 信息
-  let streamUsage: { inputTokens: number; outputTokens: number } | null = null;
-
   // 流式响应统计 - 拦截 write 方法
+  // 优化：使用字符串匹配代替 JSON 解析，仅在流结束时解析，提升首字节延迟
   if (isStreaming) {
     res.write = function(chunk: any, ...args: any[]): boolean {
       const chunkStr = chunk.toString();
-      
-      // 解析 OpenAI 格式的 usage 信息
-      if (req.path.includes('/chat/completions')) {
-        // 检查是否包含 usage 信息的 chunk
-        const lines = chunkStr.split('\n');
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6).trim();
-            if (data !== '[DONE]') {
-              try {
-                const parsed = JSON.parse(data);
-                if (parsed.usage) {
-                  streamUsage = {
-                    inputTokens: parsed.usage.prompt_tokens || 0,
-                    outputTokens: parsed.usage.completion_tokens || 0
-                  };
-                }
-              } catch (e) {
-                // 忽略解析错误
-              }
-            }
-          }
-        }
-      }
-      
-      // 解析 Anthropic 格式的 usage 信息
-      if (req.path.includes('/messages')) {
-        // 检查是否包含 message_stop 事件
-        const lines = chunkStr.split('\n');
-        for (const line of lines) {
-          if (line === 'event: message_stop') {
-            // 查找对应的 data 行
-            const dataIndex = lines.indexOf(line) + 1;
-            if (dataIndex < lines.length && lines[dataIndex].startsWith('data: ')) {
-              const data = lines[dataIndex].slice(6).trim();
-              try {
-                const parsed = JSON.parse(data);
-                if (parsed.usage) {
-                  streamUsage = {
-                    inputTokens: parsed.usage.input_tokens || 0,
-                    outputTokens: parsed.usage.output_tokens || 0
-                  };
-                }
-              } catch (e) {
-                // 忽略解析错误
-              }
-            }
-          }
-        }
-      }
-      
-      // 检查是否到达流结束
-      if (!streamRecorded && (chunkStr.includes('[DONE]') || chunkStr.includes('data: [DONE]') || chunkStr.includes('event: message_stop'))) {
-        // 流结束，计算统计
-        const responseTime = Date.now() - startTime;
-        
-        // 尝试从响应头获取 usage (作为备用)
-        let usage = streamUsage;
-        if (!usage) {
+
+      // 仅在流结束时才解析 usage，平时只做字符串检查
+      if (!streamRecorded) {
+        // 快速字符串匹配检查流是否结束
+        const isStreamEnd = chunkStr.includes('[DONE]') ||
+                           chunkStr.includes('data: [DONE]') ||
+                           chunkStr.includes('event: message_stop');
+
+        if (isStreamEnd) {
+          // 流结束，统计耗时
+          const responseTime = Date.now() - startTime;
+          let usage: { inputTokens: number; outputTokens: number } | null = null;
+
+          // 优先从响应头获取（上游 API 会在结束时通过响应头传递）
           const xRayUsage = res.getHeader('x-usage') || res.getHeader('x-amazon-xray-usage');
           usage = parseXRayUsage(xRayUsage as string);
-        }
 
-        if (usage && (usage.inputTokens > 0 || usage.outputTokens > 0)) {
-          const record: TokenRecord = {
-            timestamp: new Date().toISOString(),
-            apiType: getApiType(req.path),
-            route: req.path,
-            model: req.body?.model || '',
-            inputTokens: usage.inputTokens,
-            outputTokens: usage.outputTokens,
-            totalTokens: usage.inputTokens + usage.outputTokens,
-            responseTime,
-            statusCode: res.statusCode,
-            isStream: true
-          };
-          // 异步保存，不等待完成
-          saveTokenRecord(record).catch(console.error);
-          streamRecorded = true;
+          // 响应头没有时，才从 chunk 中用正则提取（仅解析最后一次）
+          if (!usage) {
+            if (req.path.includes('/chat/completions')) {
+              // 尝试用正则提取 OpenAI usage
+              const usageMatch = chunkStr.match(/"usage"\s*:\s*\{[^}]*"prompt_"\s*:\s*(\d+)/);
+              const completionMatch = chunkStr.match(/"completion_tokens"\s*:\s*(\d+)/);
+              if (usageMatch && completionMatch) {
+                usage = {
+                  inputTokens: parseInt(usageMatch[1], 10),
+                  outputTokens: parseInt(completionMatch[1], 10)
+                };
+              }
+            } else if (req.path.includes('/messages')) {
+              // 尝试用正则提取 Anthropic usage
+              const inputMatch = chunkStr.match(/"input_"\s*:\s*(\d+)/);
+              const outputMatch = chunkStr.match(/"output_"\s*:\s*(\d+)/);
+              if (inputMatch && outputMatch) {
+                usage = {
+                  inputTokens: parseInt(inputMatch[1], 10),
+                  outputTokens: parseInt(outputMatch[1], 10)
+                };
+              }
+            }
+          }
+
+          if (usage && (usage.inputTokens > 0 || usage.outputTokens > 0)) {
+            const record: TokenRecord = {
+              timestamp: new Date().toISOString(),
+              apiType: getApiType(req.path),
+              route: req.path,
+              model: req.body?.model || '',
+              inputTokens: usage.inputTokens,
+              outputTokens: usage.outputTokens,
+              totalTokens: usage.inputTokens + usage.outputTokens,
+              responseTime,
+              statusCode: res.statusCode,
+              isStream: true
+            };
+            // 异步保存，不等待完成
+            saveTokenRecord(record).catch(console.error);
+            streamRecorded = true;
+          }
         }
       }
+
       return originalWrite(chunk, ...args);
     };
   }

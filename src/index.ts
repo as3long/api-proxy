@@ -53,4 +53,5 @@ app.listen(config.port, () => {
   console.log(`Health check: http://localhost:${config.port}/health`);
   console.log(`API endpoint: http://localhost:${config.port}/v1/chat/completions`);
   console.log(`API endpoint: http://localhost:${config.port}/v1/messages`);
+  console.log(`Token stats dashboard: http://localhost:${config.port}/token-stats.html`);
 });
