@@ -6,8 +6,7 @@ import {
   AnthropicContentBlock,
   AnthropicResponse,
   OpenAIResponse,
-  OpenAIToolCall,
-  reverseModelMapping
+  OpenAIToolCall
 } from './types';
 
 /**
@@ -234,8 +233,8 @@ export function convertAnthropicRequestToOpenAI(request: AnthropicRequest, defau
       });
     }
 
-  // 转换模型
-  const openAIModel = reverseModelMapping[request.model] || defaultModel;
+  // 转换模型：如果request中包含model信息，则直接使用请求的模型，否则使用默认的
+  const openAIModel = request.model || defaultModel;
 
   // 构建OpenAI请求
   const openAIRequest: OpenAIRequest = {
@@ -284,6 +283,8 @@ export function convertAnthropicRequestToOpenAI(request: AnthropicRequest, defau
       // 处理tool_choice为字符串的情况
       openAIRequest.tool_choice = request.tool_choice;
     }
+  } else {
+    openAIRequest.tool_choice = 'auto';
   }
 
   return openAIRequest;

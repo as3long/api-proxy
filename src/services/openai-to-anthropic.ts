@@ -5,8 +5,7 @@ import {
   AnthropicMessage,
   AnthropicContentBlock,
   OpenAIChatCompletionResponse,
-  AnthropicResponse,
-  modelMapping
+  AnthropicResponse
 } from './types';
 
 /**
@@ -97,8 +96,8 @@ export function convertOpenAIRequestToAnthropic(request: OpenAIRequest, defaultM
     }
   });
 
-  // 转换模型
-  const anthropicModel = modelMapping[request.model] || defaultModel;
+  // 转换模型：如果request中包含model信息，则直接使用请求的模型，否则使用默认的
+  const anthropicModel = request.model || defaultModel;
 
   // 构建Anthropic请求
   const anthropicRequest: AnthropicRequest = {

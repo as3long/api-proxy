@@ -139,17 +139,3 @@ export interface OpenAIChatCompletionResponse {
     total_tokens: number;
   };
 }
-
-// 模型映射
-export const modelMapping: Record<string, string> = {
-  'gpt-3.5-turbo': 'claude-3-haiku-20240229',
-  'gpt-4': 'claude-3-opus-20240229',
-  'gpt-4-turbo': 'claude-3-opus-20240229',
-};
-
-// 反向模型映射
-export const reverseModelMapping: Record<string, string> = {
-  'claude-3-haiku-20240229': 'gpt-3.5-turbo',
-  'claude-3-opus-20240229': 'gpt-4',
-  'claude-3-sonnet-20240229': 'gpt-4',
-};
